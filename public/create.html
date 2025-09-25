@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Publier une annonce</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+  <nav class="bg-white shadow-md p-4">
+    <a href="/index.html" class="text-blue-600 font-semibold">← Retour</a>
+  </nav>
+
+  <main class="max-w-3xl mx-auto mt-10 bg-white shadow-lg rounded-xl p-8">
+    <h2 class="text-2xl font-bold mb-6">Publier une nouvelle maison</h2>
+
+    <form id="createForm" enctype="multipart/form-data" class="space-y-4">
+      <input type="text" name="title" placeholder="Titre de l'annonce" required class="w-full p-3 border rounded-lg">
+      <input type="number" name="price" placeholder="Prix (FCFA)" required class="w-full p-3 border rounded-lg">
+      <input type="text" name="location" placeholder="Quartier" required class="w-full p-3 border rounded-lg">
+      <input type="number" name="rooms" placeholder="Nombre de chambres" required class="w-full p-3 border rounded-lg">
+      <input type="text" name="conditions" placeholder="Conditions (ex: 2 mois d’avance)" class="w-full p-3 border rounded-lg">
+      <textarea name="description" placeholder="Description" class="w-full p-3 border rounded-lg"></textarea>
+      <input type="file" name="image" accept="image/*" required class="w-full">
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">
+        Publier
+      </button>
+    </form>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>

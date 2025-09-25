@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Accueil - Location Immo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navbar -->
+  <nav class="bg-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-600">🏡 Location Immo</h1>
+      <a href="/create.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Publier une annonce</a>
+    </div>
+  </nav>
+
+  <!-- Contenu -->
+  <main class="max-w-6xl mx-auto mt-8 px-4">
+    <h2 class="text-xl font-semibold mb-6">Maisons disponibles</h2>
+    <div id="listings" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <!-- Annonces chargées en JS -->
+    </div>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>
