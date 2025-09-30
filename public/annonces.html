@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Annonces - Location Immo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Navigation -->
+  <header class="bg-blue-600 text-white shadow">
+    <nav class="max-w-6xl mx-auto flex justify-between items-center p-4">
+      <a href="index.html" class="text-2xl font-bold">🏠 Location Immo</a>
+      <ul class="flex gap-6 font-medium">
+        <li><a href="index.html" class="hover:underline">Accueil</a></li>
+        <li><a href="annonces.html" class="hover:underline">Annonces</a></li>
+        <li><a href="create.html" class="hover:underline">Publier</a></li>
+        <li><a href="login.html" class="hover:underline">Connexion</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="max-w-6xl mx-auto p-6">
+
+    <h1 class="text-3xl font-bold mb-6 text-center">Annonces disponibles</h1>
+
+    <!-- Filtres -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <input type="number" id="filterPrice" placeholder="Prix" class="p-2 border rounded flex-1">
+      <select id="filterNeighborhood" class="p-2 border rounded flex-1">
+        <option value="">Quartier</option>
+        <option>Tanghin</option><option>Nioko1</option><option>Nioko2</option>
+        <option>Dassassogo</option><option>Tampouy</option><option>Rimkieta</option>
+        <option>Karpala</option><option>Wayalgin</option><option>Benogo</option>
+        <option>Wemtenga</option><option>Zongona</option><option>Pissy</option>
+        <option>Cissin</option><option>Markoussy</option><option>Pat Doie</option>
+        <option>1200 Logement</option><option>Noncin</option><option>Bonheur Ville</option>
+        <option>Zone Une</option><option>Gounghin</option><option>Koulouba</option>
+        <option>Zongona</option><option>Somgandé</option><option>Kalgodé</option>
+        <option>Nagrin</option><option>Somnaaba</option><option>Balkuy</option>
+        <option>Belle Ville</option><option>Tabtenga</option><option>Sonré</option>
+        <option>Saaba</option><option>Djikofè</option><option>Kossodo</option>
+        <option>Pazani</option><option>Polesgo</option><option>Garghin</option>
+        <option>Rayongo</option><option>Borgo</option><option>Kambouinssé</option>
+      </select>
+      <button id="btnFilter" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filtrer</button>
+      <button id="btnClear" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Tout voir</button>
+    </div>
+
+    <!-- Liste des annonces -->
+    <div id="annonces" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
+
+  <script>
+    const annoncesDiv = document.getElementById('annonces');
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
+
+    async function loadListings(url='/api/listings'){
+      const res = await fetch(url);
+      const data = await res.json();
+      renderListings(data);
+    }
+
+    function renderListings(listings){
+      annoncesDiv.innerHTML = '';
+      if(listings.length === 0){
+        annoncesDiv.innerHTML = '<p class="col-span-full text-center text-gray-600">Aucune annonce trouvée</p>';
+        return;
+      }
+
+      listings.forEach(listing => {
+        const div = document.createElement('div');
+        div.className = 'bg-white p-4 rounded shadow flex flex-col';
+
+        // Afficher la première image si disponible
+        const imgSrc = listing.images && listing.images.length ? listing.images[0].url : 'https://via.placeholder.com/400x250?text=Maison';
+        div.innerHTML = `
+          <img src="${imgSrc}" class="w-full h-48 object-cover rounded mb-2">
+          <h2 class="text-xl font-bold">${listing.title}</h2>
+          <p class="text-gray-700">Prix: ${listing.price} FCFA</p>
+          <p class="text-gray-700">Quartier: ${listing.neighborhood}</p>
+          <p class="text-gray-500 text-sm mb-2">Publié par: ${listing.author}</p>
+          <button class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 mb-2" onclick="showDetails(${listing.id})">Détails</button>
+        `;
+
+        // Supprimer si c'est l'auteur
+        if(username && listing.author === username){
+          const btnDel = document.createElement('button');
+          btnDel.textContent = 'Supprimer';
+          btnDel.className = 'bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700';
+          btnDel.addEventListener('click', async ()=>{
+            if(!confirm('Voulez-vous vraiment supprimer cette annonce ?')) return;
+            const res = await fetch('/api/listings/'+listing.id, {
+              method:'DELETE',
+              headers:{ 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            if(data.success){
+              alert('Annonce supprimée !');
+              loadListings();
+            } else {
+              alert(data.message);
+            }
+          });
+          div.appendChild(btnDel);
+        }
+
+        annoncesDiv.appendChild(div);
+      });
+    }
+
+    async function showDetails(id){
+      const res = await fetch('/api/listings/'+id);
+      const data = await res.json();
+      if(!data.id){
+        alert('Annonce introuvable');
+        return;
+      }
+
+      // Créer popup avec tous les détails
+      const features = [];
+      if(data.water) features.push('Eau');
+      if(data.electricity) features.push('Courant');
+      if(data.kitchen) features.push('Cuisine');
+      if(data.bedroom_salon) features.push('Chambre salon');
+      if(data.bedroom) features.push('Chambre');
+      if(data.tiled) features.push('Carrelé');
+      if(data.ventilated) features.push('Ventilé');
+      if(data.glazed) features.push('Vitré');
+      if(data.two_numbers) features.push('Deux numéros');
+      if(data.shower_internal) features.push('Douche interne');
+      if(data.unique_yard) features.push('Cours unique');
+      if(data.shared_yard) features.push('Cours commune');
+      if(data.new_build) features.push('Nouvelle construction');
+
+      let imagesHtml = '';
+      if(data.images && data.images.length){
+        imagesHtml = data.images.map(img=>`<img src="${img.url}" class="w-full h-48 object-cover rounded mb-2">`).join('');
+      }
+
+      const details = `
+        ${imagesHtml}
+        <h2 class="text-xl font-bold mb-2">${data.title}</h2>
+        <p><strong>Prix:</strong> ${data.price} FCFA</p>
+        <p><strong>Quartier:</strong> ${data.neighborhood}</p>
+        <p><strong>Description:</strong> ${data.description}</p>
+        <p><strong>Caractéristiques:</strong> ${features.join(', ') || 'Aucune'}</p>
+        <p><strong>Publié par:</strong> ${data.author}</p>
+        <p><strong>Date de publication:</strong> ${new Date(data.created_at).toLocaleString()}</p>
+      `;
+
+      const popup = document.createElement('div');
+      popup.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+      popup.innerHTML = `
+        <div class="bg-white rounded shadow p-6 max-w-lg w-full relative overflow-auto max-h-full">
+          <button onclick="this.parentElement.parentElement.remove()" class="absolute top-2 right-2 text-red-600 font-bold">X</button>
+          ${details}
+        </div>
+      `;
+      document.body.appendChild(popup);
+    }
+
+    // Filtres
+    document.getElementById('btnFilter').addEventListener('click', ()=>{
+      const price = document.getElementById('filterPrice').value;
+      const neighborhood = document.getElementById('filterNeighborhood').value;
+      let url = '/api/listings?';
+      if(price) url += `price=${price}&`;
+      if(neighborhood) url += `neighborhood=${encodeURIComponent(neighborhood)}`;
+      loadListings(url);
+    });
+
+    document.getElementById('btnClear').addEventListener('click', ()=>{
+      document.getElementById('filterPrice').value = '';
+      document.getElementById('filterNeighborhood').value = '';
+      loadListings();
+    });
+
+    loadListings();
+  </script>
+</body>
+</html>

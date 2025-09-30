@@ -2,26 +2,64 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Détails Maison</title>
+  <title>Détails annonce - Location Immo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
-  <nav class="bg-white shadow-md p-4">
-    <a href="/index.html" class="text-blue-600 font-semibold">← Retour</a>
-  </nav>
+<body class="bg-gray-100 min-h-screen p-4">
 
-  <main class="max-w-4xl mx-auto mt-8 bg-white shadow-lg rounded-xl overflow-hidden">
-    <img id="detailImage" src="" alt="Maison" class="w-full h-80 object-cover">
-    <div class="p-6">
-      <h2 id="detailTitle" class="text-2xl font-bold mb-2"></h2>
-      <p id="detailPrice" class="text-xl text-green-600 font-semibold mb-4"></p>
-      <p id="detailLocation" class="text-gray-600 mb-2"></p>
-      <p id="detailRooms" class="mb-2"></p>
-      <p id="detailConditions" class="mb-4"></p>
-      <p id="detailDescription" class="text-gray-700"></p>
-    </div>
-  </main>
+  <!-- Navigation -->
+  <header class="bg-blue-600 text-white shadow mb-6">
+    <nav class="max-w-6xl mx-auto flex justify-between items-center p-4">
+      <a href="index.html" class="text-2xl font-bold">🏠 Location Immo</a>
+      <ul class="flex gap-6 font-medium">
+        <li><a href="index.html" class="hover:underline">Accueil</a></li>
+        <li><a href="annonces.html" class="hover:underline">Annonces</a></li>
+        <li><a href="create.html" class="hover:underline">Publier</a></li>
+        <li><a href="login.html" class="hover:underline">Connexion</a></li>
+      </ul>
+    </nav>
+  </header>
 
-  <script src="/script.js"></script>
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow" id="detailContainer">
+    <p class="text-center text-gray-500">Chargement...</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const container = document.getElementById('detailContainer');
+
+    async function loadDetail(){
+      const res = await fetch('/api/listings/' + id);
+      if(!res.ok){
+        container.innerHTML = '<p class="text-center text-red-500">Annonce introuvable</p>';
+        return;
+      }
+      const listing = await res.json();
+
+      const imgs = listing.images.map(img => `<img src="${img.url}" class="w-full h-64 object-cover rounded mb-4">`).join('');
+
+      const features = `
+        <p><strong>Prix:</strong> ${listing.price}</p>
+        <p><strong>Quartier:</strong> ${listing.neighborhood}</p>
+        <p><strong>Chambre:</strong> ${listing.chambre ? 'Oui' : 'Non'}, <strong>Chambre salon:</strong> ${listing.chambre_salon ? 'Oui' : 'Non'}</p>
+        <p><strong>Douche interne:</strong> ${listing.shower_internal ? 'Oui' : 'Non'}</p>
+        <p><strong>Cours:</strong> ${listing.cours_unique ? 'Unique' : listing.cours_commune ? 'Commune' : 'Aucune'}</p>
+        <p><strong>Eau:</strong> ${listing.water ? 'Oui' : 'Non'}, <strong>Courant:</strong> ${listing.electricity ? 'Oui' : 'Non'}</p>
+        <p><strong>Cuisine:</strong> ${listing.cuisine ? 'Oui' : 'Non'}, <strong>Vitré:</strong> ${listing.vitré ? 'Oui' : 'Non'}, <strong>Carrelé:</strong> ${listing.carrelé ? 'Oui' : 'Non'}, <strong>Ventilé:</strong> ${listing.ventilé ? 'Oui' : 'Non'}</p>
+        <p><strong>Date de publication:</strong> ${new Date(listing.created_at).toLocaleString()}</p>
+      `;
+
+      container.innerHTML = `
+        ${imgs}
+        <h2 class="text-2xl font-bold mb-2">${listing.title}</h2>
+        <p class="text-gray-700 mb-4">${listing.description}</p>
+        ${features}
+      `;
+    }
+
+    loadDetail();
+  </script>
 </body>
 </html>

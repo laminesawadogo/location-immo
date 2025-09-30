@@ -1,0 +1,23 @@
+<input type="text" name="username" placeholder="Nom d'utilisateur" required>
+<input type="password" name="password" placeholder="Mot de passe" required>
+<button>Se connecter</button>
+<script>
+  const form = document.querySelector('form');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const res = await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        username: form.username.value,
+        password: form.password.value
+      })
+    });
+    const data = await res.json();
+    if(data.success){
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', form.username.value);
+      window.location.href = 'index.html';
+    } else alert(data.message);
+  });
+</script>

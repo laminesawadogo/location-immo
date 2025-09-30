@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mes annonces — Location Immo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .carousel-img { transition: opacity 0.45s ease; position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+    .carousel-wrap { position:relative; width:100%; height:200px; overflow:hidden; border-radius:6px; }
+    .img-overlay-btn { background:rgba(0,0,0,0.6); color:white; padding:4px 6px; border-radius:4px; cursor:pointer; font-size:13px; }
+    .modal { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+  <div class="max-w-5xl mx-auto">
+
+    <header class="mb-6 text-center">
+      <h1 class="text-3xl font-bold">Mes annonces</h1>
+      <p class="text-gray-600">Gérer, éditer, supprimer ou marquer comme prise vos annonces publiées</p>
+    </header>
+
+    <div class="mb-4 flex items-center gap-3">
+      <a href="/create.html" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">➕ Nouvelle annonce</a>
+      <a href="/annonces.html" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Voir toutes</a>
+      <div class="ml-auto text-sm text-gray-600">Connecté : <span id="me"></span></div>
+    </div>
+
+    <section id="list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></section>
+  </div>
+
+  <!-- Modal Edit -->
+  <div id="editModal" class="hidden modal z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="editTitle" class="text-xl font-bold">Éditer l'annonce</h2>
+        <button id="closeEdit" class="text-gray-600 hover:text-black">Fermer ✕</button>
+      </div>
+
+      <form id="editForm" class="space-y-3" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Titre" class="w-full p-2 border rounded" required>
+        <textarea name="description" placeholder="Description" class="w-full p-2 border rounded"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" name="price" placeholder="Prix (FCFA)" class="p-2 border rounded" required>
+          <select name="neighborhood" class="p-2 border rounded">
+            <option value="">Quartier</option>
+            <option>Tanghin</option><option>Nioko1</option><option>Nioko2</option><option>Dassassogo</option><option>Tampouy</option><option>Rimkieta</option><option>Karpala</option><option>Wayalgin</option><option>Benogo</option><option>Wemtenga</option><option>Zongona</option><option>Pissy</option><option>Cissin</option><option>Markoussy</option><option>Pat Doie</option><option>1200 Logement</option><option>Noncin</option><option>Bonheur Ville</option><option>Zone Une</option><option>Gounghin</option><option>Koulouba</option><option>Somgandé</option><option>Kalgodé</option><option>Nagrin</option><option>Somnaaba</option><option>Balkuy</option><option>Belle Ville</option><option>Tabtenga</option><option>Sonré</option><option>Saaba</option><option>Djikofè</option><option>Kossodo</option><option>Pazani</option><option>Polesgo</option><option>Garghin</option><option>Rayongo</option><option>Borgo</option><option>Kambouinssé</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" name="phone_display" placeholder="Numéro 1" class="p-2 border rounded">
+          <input type="text" name="phone_display2" placeholder="Numéro 2" class="p-2 border rounded">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <label class="inline-flex items-center"><input type="checkbox" name="water" class="mr-2">Eau</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="electricity" class="mr-2">Courant</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="kitchen" class="mr-2">Cuisine</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="shower_internal" class="mr-2">Douche interne</label>
+        </div>
+
+        <label class="block">
+          <span class="text-sm">Ajouter de nouvelles images (facultatif)</span>
+          <input type="file" name="images" multiple accept="image/*" class="mt-1 w-full">
+        </label>
+
+        <div class="flex gap-2">
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Enregistrer</button>
+          <button type="button" id="cancelEdit" class="bg-gray-200 px-4 py-2 rounded">Annuler</button>
+        </div>
+
+        <div id="editMsg" class="text-sm mt-2"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const meSpan = document.getElementById('me');
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username') || '';
+    meSpan.textContent = username ? username : 'Non connecté';
+
+    // helpers
+    async function parseResponse(res){
+      const text = await res.text();
+      try { return JSON.parse(text); } catch { return { success:false, message: text || res.statusText }; }
+    }
+
+    // load user's listings (server returns only non-taken by default; includeTaken=true to see taken)
+    async function loadMyListings(){
+      if(!username){ listEl.innerHTML = '<p class="text-center text-gray-600">Connectez-vous pour voir vos annonces.</p>'; return; }
+      try {
+        const res = await fetch('/api/listings?includeTaken=true');
+        if(!res.ok){
+          const err = await parseResponse(res);
+          listEl.innerHTML = `<p class="text-center text-red-600">Erreur: ${err.message || res.statusText}</p>`;
+          return;
+        }
+        const all = await res.json();
+        const mine = (all || []).filter(l => l.author === username);
+        renderMyListings(mine);
+      } catch(e){
+        listEl.innerHTML = `<p class="text-center text-red-600">Erreur réseau: ${e.message}</p>`;
+      }
+    }
+
+    function renderMyListings(listings){
+      if(!listings || listings.length === 0){
+        listEl.innerHTML = '<p class="text-center text-gray-600">Vous n\'avez aucune annonce.</p>';
+        return;
+      }
+      listEl.innerHTML = listings.map(l => {
+        const imgs = (l.images||[]).map(img => `<img src="${img.url}" data-filename="${img.url.split('/').pop()}" class="w-full h-32 object-cover rounded">`).join('');
+        return `
+          <article class="bg-white rounded shadow p-3 flex flex-col">
+            <div class="carousel-wrap relative mb-3">${imgs || '<div class="bg-gray-100 h-32 flex items-center justify-center text-gray-500">Pas d\'image</div>'}</div>
+            <h3 class="font-bold">${escapeHtml(l.title)}</h3>
+            <p class="text-sm text-gray-600">Quartier: ${escapeHtml(l.neighborhood || '—')}</p>
+            <p class="text-green-600 font-semibold">${l.price ? l.price + ' FCFA' : 'Prix non renseigné'}</p>
+            <p class="text-gray-700 mt-2">${escapeHtml(l.description || '')}</p>
+            <p class="text-gray-500 text-xs mt-2">Publié le: ${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</p>
+
+            <div class="mt-3 flex gap-2">
+              <button data-id="${l.id}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">✏️ Éditer</button>
+              <button data-id="${l.id}" class="mark-btn bg-indigo-600 text-white px-3 py-1 rounded">${l.taken ? 'Marquer disponible' : 'Marquer pris'}</button>
+              <button data-id="${l.id}" class="delete-btn bg-red-600 text-white px-3 py-1 rounded">🗑 Supprimer</button>
+            </div>
+
+            <div class="mt-2 text-sm text-gray-600">
+              <strong>Images:</strong>
+              <div class="flex gap-2 mt-2 image-row">${(l.images||[]).map(img=>`<div class="relative"><img src="${img.url}" class="w-24 h-16 object-cover rounded"><button data-id="${l.id}" data-filename="${img.url.split('/').pop()}" class="del-image absolute top-1 right-1 bg-red-600 text-white text-xs px-1 rounded">x</button></div>`).join('') || ' Aucune'}</div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      // wire buttons
+      document.querySelectorAll('.delete-btn').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const id = b.getAttribute('data-id');
+          if(!confirm('Supprimer complètement cette annonce ? (images supprimées)')) return;
+          try {
+            const res = await fetch('/api/listings/' + id, { method:'DELETE', headers: { 'Authorization':'Bearer ' + token } });
+            const r = await parseResponse(res);
+            if(res.ok && r.success){ alert('Supprimée'); loadMyListings(); } else alert(r.message || 'Erreur');
+          } catch(e){ alert('Erreur réseau: '+e.message); }
+        });
+      });
+
+      document.querySelectorAll('.mark-btn').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const id = b.getAttribute('data-id');
+          const mark = b.textContent.includes('pris') ? true : false;
+          try {
+            const res = await fetch(`/api/listings/${id}/taken`, {
+              method:'PATCH',
+              headers: { 'Authorization':'Bearer ' + token, 'Content-Type':'application/json' },
+              body: JSON.stringify({ taken: !mark })
+            });
+            const r = await parseResponse(res);
+            if(res.ok && r.success){ alert('État mis à jour'); loadMyListings(); } else alert(r.message || 'Erreur');
+          } catch(e){ alert('Erreur réseau: '+e.message); }
+        });
+      });
+
+      document.querySelectorAll('.edit-btn').forEach(b=>{
+        b.addEventListener('click', ()=> openEdit(b.getAttribute('data-id')));
+      });
+
+      document.querySelectorAll('.del-image').forEach(btn=>{
+        btn.addEventListener('click', async (ev)=>{
+          ev.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          const fname = btn.getAttribute('data-filename');
+          if(!confirm('Supprimer cette image ?')) return;
+          try {
+            const res = await fetch(`/api/listings/${id}/images/${encodeURIComponent(fname)}`, {
+              method:'DELETE',
+              headers: { 'Authorization':'Bearer ' + token }
+            });
+            const r = await parseResponse(res);
+            if(res.ok && r.success){ alert('Image supprimée'); loadMyListings(); } else alert(r.message || 'Erreur');
+          } catch(e){ alert('Erreur réseau: '+e.message); }
+        });
+      });
+    }
+
+    // utility
+    function escapeHtml(str){ if(!str) return ''; return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+
+    // ============ Edit modal logic ============
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
+    const editMsg = document.getElementById('editMsg');
+    const closeEdit = document.getElementById('closeEdit');
+    const cancelEdit = document.getElementById('cancelEdit');
+
+    let editingId = null;
+
+    function openEdit(id){
+      // load one listing data from server
+      fetch('/api/listings/' + id)
+        .then(res => res.json())
+        .then(l => {
+          editingId = id;
+          // fill form
+          editForm.title.value = l.title || '';
+          editForm.description.value = l.description || '';
+          editForm.price.value = l.price || '';
+          editForm.neighborhood.value = l.neighborhood || '';
+          editForm.phone_display.value = l.phone_display || '';
+          editForm.phone_display2.value = l.phone_display2 || '';
+          editForm.water.checked = !!l.water;
+          editForm.electricity.checked = !!l.electricity;
+          editForm.kitchen.checked = !!l.kitchen;
+          editForm.shower_internal.checked = !!l.shower_internal;
+          editMsg.textContent = '';
+          editModal.classList.remove('hidden');
+        })
+        .catch(e => alert('Erreur: ' + e.message));
+    }
+
+    closeEdit.addEventListener('click', ()=> editModal.classList.add('hidden'));
+    cancelEdit.addEventListener('click', ()=> editModal.classList.add('hidden'));
+
+    editForm.addEventListener('submit', async (ev)=>{
+      ev.preventDefault();
+      if(!editingId) return;
+      editMsg.textContent = '';
+      const fd = new FormData(editForm);
+      try {
+        const res = await fetch('/api/listings/' + editingId, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: fd
+        });
+        const r = await parseResponse(res);
+        if(res.ok && r.success){
+          editMsg.style.color = 'green';
+          editMsg.textContent = 'Modifications enregistrées.';
+          setTimeout(()=>{ editModal.classList.add('hidden'); loadMyListings(); }, 900);
+        } else {
+          editMsg.style.color = 'red';
+          editMsg.textContent = r.message || 'Erreur';
+        }
+      } catch(e){
+        editMsg.style.color = 'red';
+        editMsg.textContent = 'Erreur réseau: ' + e.message;
+      }
+    });
+
+    // init
+    loadMyListings();
+  </script>
+</body>
+</html>

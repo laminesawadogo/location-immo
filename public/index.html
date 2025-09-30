@@ -2,26 +2,66 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Accueil - Location Immo</title>
+  <title>Location Immo - Accueil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 font-sans">
-  <!-- Navbar -->
-  <nav class="bg-white shadow-lg">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-blue-600">🏡 Location Immo</h1>
-      <a href="/create.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Publier une annonce</a>
-    </div>
-  </nav>
+<body class="bg-gray-100 flex flex-col min-h-screen">
 
-  <!-- Contenu -->
-  <main class="max-w-6xl mx-auto mt-8 px-4">
-    <h2 class="text-xl font-semibold mb-6">Maisons disponibles</h2>
-    <div id="listings" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <!-- Annonces chargées en JS -->
+  <!-- Header / Navigation -->
+  <header class="bg-white shadow-md fixed top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-600">🏠 Location Immo</h1>
+      <ul class="flex gap-4 font-medium">
+        <li><a href="index.html" class="hover:text-blue-600 transition">Accueil</a></li>
+        <li><a href="annonces.html" class="hover:text-blue-600 transition">Annonces</a></li>
+        <li><a href="create.html" class="hover:text-blue-600 transition">Publier</a></li>
+        <li><a href="login.html" class="hover:text-blue-600 transition">Connexion</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="relative w-full h-screen mt-16">
+    <img src="/images/maison-hero.jpg" alt="Maison" class="w-full h-full object-cover brightness-50">
+    <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/20"></div>
+    <div class="absolute inset-0 flex flex-col justify-center items-center text-center text-white px-4">
+      <h1 class="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">Trouvez la maison de vos rêves</h1>
+      <p class="text-xl md:text-2xl mb-6 drop-shadow-md">Explorez, publiez et louez facilement sur notre plateforme</p>
+      <div class="flex gap-4">
+        <a href="create.html" class="bg-blue-600 px-6 py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform hover:scale-105">Publier</a>
+        <a href="annonces.html" class="bg-green-600 px-6 py-3 rounded-lg hover:bg-green-700 shadow-lg transition transform hover:scale-105">Voir annonces</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenu d’accueil -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 py-16">
+    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-12 text-center">Pourquoi choisir Location Immo ?</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white p-8 rounded-xl shadow-lg text-center hover:shadow-2xl transition transform hover:-translate-y-1">
+        <i class="fas fa-rocket text-4xl text-blue-600 mb-4"></i>
+        <h3 class="text-xl font-semibold mb-2">Facile à utiliser</h3>
+        <p class="text-gray-600">Publiez ou trouvez rapidement des maisons avec des filtres simples.</p>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-lg text-center hover:shadow-2xl transition transform hover:-translate-y-1">
+        <i class="fas fa-check-circle text-4xl text-green-600 mb-4"></i>
+        <h3 class="text-xl font-semibold mb-2">Fiable</h3>
+        <p class="text-gray-600">Toutes les annonces sont vérifiées et mises à jour régulièrement.</p>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-lg text-center hover:shadow-2xl transition transform hover:-translate-y-1">
+        <i class="fas fa-shield-alt text-4xl text-red-600 mb-4"></i>
+        <h3 class="text-xl font-semibold mb-2">Sécurisé</h3>
+        <p class="text-gray-600">Vos données et contacts restent protégés lors de la publication et de la consultation.</p>
+      </div>
     </div>
   </main>
 
-  <script src="/script.js"></script>
+  <!-- Footer -->
+  <footer class="bg-white border-t py-6 text-center text-gray-600 mt-12">
+    &copy; 2025 Location Immo - Tous droits réservés
+  </footer>
+
 </body>
 </html>
