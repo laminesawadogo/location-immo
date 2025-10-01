@@ -2,60 +2,62 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Inscription - Location Immo</title>
+  <title>Créer un compte - Location Immo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-  <!-- Navigation -->
-  <header class="bg-blue-600 text-white shadow">
-    <nav class="max-w-6xl mx-auto flex justify-between items-center p-4">
-      <a href="index.html" class="text-2xl font-bold">🏠 Location Immo</a>
-      <ul class="flex gap-6 font-medium">
-        <li><a href="index.html" class="hover:underline">Accueil</a></li>
-        <li><a href="annonces.html" class="hover:underline">Annonces</a></li>
-        <li><a href="create.html" class="hover:underline">Publier</a></li>
-        <li><a href="login.html" class="hover:underline">Connexion</a></li>
-      </ul>
-    </nav>
-  </header>
+  <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Créer un compte</h1>
 
-  <div class="flex-grow flex items-center justify-center p-6">
-    <div class="bg-white p-8 rounded shadow w-full max-w-md">
-      <h1 class="text-3xl font-bold mb-6 text-center">Inscription</h1>
-      <form id="registerForm" class="space-y-4">
+    <form id="registerForm" class="space-y-4">
+      <input type="text" id="username" placeholder="Nom d'utilisateur" required
+             class="w-full p-3 border rounded">
+      <input type="password" id="password" placeholder="Mot de passe" required
+             class="w-full p-3 border rounded">
 
-        <input type="text" id="username" placeholder="Nom d'utilisateur" class="w-full p-2 border rounded" required>
-        <input type="password" id="password" placeholder="Mot de passe" class="w-full p-2 border rounded" required>
+      <button type="submit"
+              class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        S'inscrire
+      </button>
+    </form>
 
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">S'inscrire</button>
-      </form>
-      <p class="text-center mt-4">Déjà inscrit ? <a href="login.html" class="text-blue-600 hover:underline">Se connecter</a></p>
-    </div>
+    <p class="text-center text-gray-600 mt-4">
+      Déjà un compte ?
+      <a href="login.html" class="text-blue-600 hover:underline">Se connecter</a>
+    </p>
+
+    <p id="message" class="text-center mt-4 text-red-600"></p>
   </div>
 
   <script>
-    const registerForm = document.getElementById('registerForm');
+    const form = document.getElementById('registerForm');
+    const message = document.getElementById('message');
 
-    registerForm.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      message.textContent = "";
 
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          username: document.getElementById('username').value,
-          password: document.getElementById('password').value
-        })
-      });
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
 
-      const data = await res.json();
-      if(data.success){
-        alert('Inscription réussie ! Veuillez vous connecter.');
-        window.location.href = 'login.html';
-      } else {
-        alert(data.message);
+      try {
+        const res = await fetch(window.location.origin + '/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert("Compte créé avec succès !");
+          window.location.href = "login.html";
+        } else {
+          message.textContent = data.message || "Erreur lors de l'inscription.";
+        }
+      } catch (err) {
+        message.textContent = "Erreur serveur : " + err.message;
       }
     });
   </script>
