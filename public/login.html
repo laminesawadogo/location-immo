@@ -1,23 +1,67 @@
-<input type="text" name="username" placeholder="Nom d'utilisateur" required>
-<input type="password" name="password" placeholder="Mot de passe" required>
-<button>Se connecter</button>
-<script>
-  const form = document.querySelector('form');
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const res = await fetch('/api/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        username: form.username.value,
-        password: form.password.value
-      })
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion - Location Immo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Connexion</h1>
+
+    <form id="loginForm" class="space-y-4">
+      <input type="text" id="username" placeholder="Nom d'utilisateur" required
+             class="w-full p-3 border rounded">
+      <input type="password" id="password" placeholder="Mot de passe" required
+             class="w-full p-3 border rounded">
+
+      <button type="submit"
+              class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Se connecter
+      </button>
+    </form>
+
+    <p class="text-center text-gray-600 mt-4">
+      Pas encore de compte ?
+      <a href="register.html" class="text-blue-600 hover:underline">Créer un compte</a>
+    </p>
+
+    <p id="message" class="text-center mt-4 text-red-600"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.textContent = "";
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      try {
+        const res = await fetch(window.location.origin + '/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('username', username);
+          alert("Connexion réussie !");
+          window.location.href = "annonces.html";
+        } else {
+          message.textContent = data.message || "Nom d'utilisateur ou mot de passe incorrect.";
+        }
+      } catch (err) {
+        message.textContent = "Erreur serveur : " + err.message;
+      }
     });
-    const data = await res.json();
-    if(data.success){
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', form.username.value);
-      window.location.href = 'index.html';
-    } else alert(data.message);
-  });
-</script>
+  </script>
+</body>
+</html>
